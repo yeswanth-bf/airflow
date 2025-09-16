@@ -880,23 +880,6 @@ fixture-parentheses = false
 
 ## pytest settings ##
 [tool.pytest.ini_options]
-addopts = [
-    "--tb=short",
-    "-rasl",
-    "--verbosity=2",
-    # Disable `flaky` plugin for pytest. This plugin conflicts with `rerunfailures` because provide the same marker.
-    "-p", "no:flaky",
-    # Disable `nose` builtin plugin for pytest. This feature is deprecated in 7.2 and will be removed in pytest>=8
-    "-p", "no:nose",
-    # Disable support of a legacy `LocalPath` in favor of stdlib `pathlib.Path`.
-    "-p", "no:legacypath",
-    # Disable warnings summary, because we use our warning summary.
-    "--disable-warnings",
-    "--asyncio-mode=strict",
-    "--ignore-glob=**/tests/system/*",
-    "--ignore-glob=tests/system/*",
-]
-
 norecursedirs = [
     ".eggs",
     "airflow",

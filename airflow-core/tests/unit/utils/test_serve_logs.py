@@ -27,7 +27,9 @@ from fastapi.testclient import TestClient
 from airflow._shared.timezones import timezone
 from airflow.api_fastapi.auth.tokens import JWTGenerator
 from airflow.config_templates.airflow_local_settings import DEFAULT_LOGGING_CONFIG
-from airflow.utils.serve_logs import create_app
+from unittest.mock import patch
+
+from airflow.utils.serve_logs import create_app, serve_logs
 
 from tests_common.test_utils.config import conf_vars
 
@@ -98,6 +100,15 @@ def different_audience(secret_key):
         valid_for=30,
         audience="different-audience",
     )
+
+
+@patch("uvicorn.run")
+def test_serve_logs_log_level(mock_uvicorn_run):
+    with conf_vars({("logging", "logging_level"): "ERROR"}):
+        serve_logs()
+        mock_uvicorn_run.assert_called_once()
+        _, kwargs = mock_uvicorn_run.call_args
+        assert kwargs["log_level"] == "error"
 
 
 @pytest.mark.usefixtures("sample_log")

@@ -24,6 +24,7 @@ from rich.console import Console
 
 from airflow.cli.commands import api_server_command
 from airflow.exceptions import AirflowConfigException
+from tests_common.test_utils.config import conf_vars
 
 from unit.cli.commands._common_cli_classes import _CommonCLIUvicornTestClass
 
@@ -346,6 +347,28 @@ class TestCliApiServer(_CommonCLIUvicornTestClass):
             ["api-server"] + ["--ssl-cert", str(cert_path), "--ssl-key", str(key_path)]
         )
         assert api_server_command._get_ssl_cert_and_key_filepaths(args) == (str(cert_path), str(key_path))
+
+    @conf_vars({("logging", "logging_level"): "ERROR"})
+    def test_args_to_uvicorn_with_error_log_level(self):
+        with (
+            mock.patch("uvicorn.run") as mock_run,
+        ):
+            args = self.parser.parse_args(["api-server"])
+            api_server_command.api_server(args)
+
+            mock_run.assert_called_with(
+                "airflow.api_fastapi.main:app",
+                host=args.host,
+                port=args.port,
+                workers=args.workers,
+                timeout_keep_alive=args.worker_timeout,
+                timeout_graceful_shutdown=args.worker_timeout,
+                ssl_keyfile=None,
+                ssl_certfile=None,
+                access_log=False,
+                proxy_headers=False,
+                log_level="error",
+            )
 
     @pytest.fixture
     def ssl_cert_and_key(self, tmp_path):

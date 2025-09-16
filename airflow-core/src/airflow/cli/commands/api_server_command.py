@@ -31,6 +31,7 @@ import uvicorn
 
 from airflow import settings
 from airflow.cli.commands.daemon_utils import run_command_with_daemon_option
+from airflow.configuration import conf
 from airflow.exceptions import AirflowConfigException
 from airflow.typing_compat import ParamSpec
 from airflow.utils import cli as cli_utils
@@ -75,6 +76,7 @@ def _run_api_server(args, apps: str, num_workers: int, worker_timeout: int, prox
 
         setproctitle(f"airflow api_server -- host:{args.host} port:{args.port}")
 
+    log_level = conf.get("logging", "logging_level", fallback="info").lower()
     uvicorn_kwargs = {
         "host": args.host,
         "port": args.port,
@@ -83,8 +85,9 @@ def _run_api_server(args, apps: str, num_workers: int, worker_timeout: int, prox
         "timeout_graceful_shutdown": worker_timeout,
         "ssl_keyfile": ssl_key,
         "ssl_certfile": ssl_cert,
-        "access_log": True,
+        "access_log": log_level in ["info", "debug"],
         "proxy_headers": proxy_headers,
+        "log_level": log_level,
     }
     # Only set the log_config if it is provided, otherwise use the default uvicorn logging configuration.
     if args.log_config and args.log_config != "-":
